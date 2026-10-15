@@ -93,9 +93,8 @@ export function ActionDesk({ plan, nextCaseId, onComplete }: ActionDeskProps) {
                       id={inputId}
                       // Same pattern as the queue filters — biome flags inline handlers project-wide.
                       onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                        setChecked((current) =>
-                          toggleId(current, event.currentTarget.value)
-                        );
+                        const id = event.currentTarget.value;
+                        setChecked((current) => toggleId(current, id));
                       }}
                       type="checkbox"
                       value={item.id}
