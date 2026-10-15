@@ -1,24 +1,17 @@
 import { type ReactNode, useEffect, useRef } from "react";
-import {
-  ACTION,
-  CASE_STATUS,
-  COPY,
-  caseStatusLabel,
-  type LoadState,
-} from "../data/constants";
+import { useCaseNav } from "../case-nav";
+import { ActionDesk } from "../components/action-desk";
+import { buildActionPlan } from "../data/action-desk";
+import { COPY, caseStatusLabel, type LoadState } from "../data/constants";
 import { formatExpiry } from "../data/dates";
-import {
-  type EmployeeRow,
-  isActive,
-  isReadyToFile,
-  PRIORITY,
-} from "../data/priority";
+import type { EmployeeRow } from "../data/priority";
 import {
   passportBeforeVisa,
   type ReplyClock,
   replyClock,
 } from "../data/signals";
 import { validateEmployee } from "../data/validate-employee";
+import { openCase, openQueue } from "../router";
 
 type CasePageProps = {
   employeeId: string;
@@ -46,8 +39,8 @@ function keyFacts(
     if (expiry.label !== COPY.EMPTY) {
       facts.push({
         label: "Visa expires",
-        value: expiry.label,
         title: expiry.title,
+        value: expiry.label,
       });
     }
   }
@@ -60,8 +53,6 @@ const SECTIONS: {
   fields: [keyof EmployeeRow, string][];
 }[] = [
   {
-    title: "Visa",
-    tone: "case",
     fields: [
       ["visa_type", "Visa type"],
       ["case_status", "Case status"],
@@ -71,90 +62,40 @@ const SECTIONS: {
       ["expires_at", "Visa expires"],
       ["last_updated", "Last updated"],
     ],
+    title: "Visa",
+    tone: "case",
   },
   {
-    title: "Profile",
-    tone: "profile",
     fields: [
       ["profile_status", "Profile status"],
       ["profile_completion_pct", "Completion"],
     ],
+    title: "Profile",
+    tone: "profile",
   },
   {
-    title: "Passport",
     fields: [["passport_expiry", "Passport expires"]],
+    title: "Passport",
   },
   {
-    title: "Person",
     fields: [
       ["full_name", "Name"],
       ["email", "Email"],
       ["nationality", "Nationality"],
       ["employee_id", "Employee ID"],
     ],
+    title: "Person",
   },
   {
-    title: "Work",
     fields: [
       ["company", "Company"],
       ["department", "Department"],
       ["job_title", "Job title"],
       ["work_location", "Work location"],
     ],
+    title: "Work",
   },
 ];
-
-type CaseAction = {
-  title: string;
-  detail?: string;
-  urgent: boolean;
-};
-
-function profileDetail(row: EmployeeRow): string | undefined {
-  const pct = Number(row.profile_completion_pct);
-  if (!Number.isFinite(pct)) {
-    return;
-  }
-  if (pct >= PRIORITY.profile.quickWinAtPercent) {
-    return `Almost finished — ${pct}% filled in.`;
-  }
-  return `${pct}% filled in.`;
-}
-
-/** The advisor's next step. Waiting on the government is a status, not a task. */
-function advisorAction(
-  row: EmployeeRow,
-  reply: ReplyClock | null
-): CaseAction | null {
-  if (!isActive(row)) {
-    return null;
-  }
-  if (reply) {
-    return {
-      title: ACTION.SUBMIT_EVIDENCE,
-      detail: reply.due ? `${reply.label}. Due ${reply.due}.` : reply.detail,
-      urgent: reply.overdue,
-    };
-  }
-
-  const status = row.case_status.trim();
-  if (status === CASE_STATUS.DENIED) {
-    return { title: ACTION.FOLLOW_UP_DENIAL, urgent: false };
-  }
-  if (status === CASE_STATUS.WITHDRAWN) {
-    return { title: ACTION.CONFIRM_WITHDRAWN, urgent: false };
-  }
-  if (isReadyToFile(row) || status === "" || status === CASE_STATUS.NOT_FILED) {
-    return {
-      title: ACTION.WAITING_TO_SUBMIT,
-      detail: isReadyToFile(row)
-        ? ACTION.SUBMIT_CASE_DETAIL
-        : profileDetail(row),
-      urgent: false,
-    };
-  }
-  return null;
-}
 
 function fieldValue(
   row: EmployeeRow,
@@ -169,7 +110,7 @@ function fieldValue(
     if (label === raw) {
       return { text: raw };
     }
-    return { text: label, hint: `Recorded as “${raw}”` };
+    return { hint: `Recorded as “${raw}”`, text: label };
   }
   if (key === "expires_at" || key === "passport_expiry") {
     const expiry = formatExpiry(raw);
@@ -221,31 +162,18 @@ function FactValue({
   );
 }
 
-function CaseNotices({
-  action,
+function CaseWarnings({
   passport,
   warnings,
 }: {
-  action: CaseAction | null;
   passport: { passport: string; visa: string } | null;
   warnings: string[];
 }) {
-  if (!(action || passport || warnings.length > 0)) {
+  if (!(passport || warnings.length > 0)) {
     return null;
   }
   return (
     <div className="case-notices">
-      {action ? (
-        <section
-          className={
-            action.urgent ? "action-alert action-alert-urgent" : "action-alert"
-          }
-          role="status"
-        >
-          <h2>{action.title}</h2>
-          {action.detail ? <p>{action.detail}</p> : null}
-        </section>
-      ) : null}
       {passport ? (
         <section className="callout callout-warn">
           <h2>Passport expires before the visa</h2>
@@ -269,7 +197,16 @@ function CaseNotices({
   );
 }
 
+function finishAction(nextCaseId?: string) {
+  if (nextCaseId) {
+    openCase(nextCaseId);
+    return;
+  }
+  openQueue();
+}
+
 export function CasePage({ employeeId, rows, loadState }: CasePageProps) {
+  const { nextCaseId } = useCaseNav();
   const row = rows.find((candidate) => candidate.employee_id === employeeId);
   const headingRef = useRef<HTMLHeadingElement>(null);
 
@@ -306,7 +243,7 @@ export function CasePage({ employeeId, rows, loadState }: CasePageProps) {
   const warnings = validateEmployee(row, rows);
   const reply = replyClock(row);
   const passport = passportBeforeVisa(row);
-  const action = advisorAction(row, reply);
+  const plan = buildActionPlan(row);
 
   return (
     <div className="case-panel">
@@ -325,7 +262,16 @@ export function CasePage({ employeeId, rows, loadState }: CasePageProps) {
         </dl>
       </header>
 
-      <CaseNotices action={action} passport={passport} warnings={warnings} />
+      {plan ? (
+        <ActionDesk
+          key={employeeId}
+          nextCaseId={nextCaseId}
+          onComplete={finishAction}
+          plan={plan}
+        />
+      ) : null}
+
+      <CaseWarnings passport={passport} warnings={warnings} />
 
       <section className="record">
         {SECTIONS.map((section) => (

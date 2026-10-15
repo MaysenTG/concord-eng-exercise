@@ -77,14 +77,6 @@ export const CASE_STATUS_LABEL: Record<string, string> = {
 /** Days to answer a request for evidence. The export has no notice date, so the clock starts at the last update. */
 export const RFE_RESPONSE_DAYS = 87;
 
-export const ACTION = {
-  SUBMIT_EVIDENCE: "Submit the evidence",
-  FOLLOW_UP_DENIAL: "Follow up on the denial",
-  CONFIRM_WITHDRAWN: "Confirm nothing else is owed",
-  WAITING_TO_SUBMIT: "Waiting to submit",
-  SUBMIT_CASE_DETAIL: "The profile is complete.",
-} as const;
-
 export const WARNING = {
   GRANTED_SET: "but an approval date is still filled in",
   EXPIRES_SET: "but an expiry date is still filled in",

@@ -8,8 +8,8 @@ import { useRoute } from "./router";
 
 const INITIAL_FILTERS: QueueFilters = {
   advisor: "",
-  company: FILTER.ALL,
   caseStatus: FILTER.ALL,
+  company: FILTER.ALL,
   overview: null,
 };
 
