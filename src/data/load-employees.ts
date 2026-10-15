@@ -57,7 +57,7 @@ function splitLine(line: string): string[] {
 const NEWLINE = /\r?\n/;
 
 export async function loadEmployees() {
-  const res = await fetch("/concord_employees.csv");
+  const res = await fetch(`${import.meta.env.BASE_URL}concord_employees.csv`);
   const text = await res.text();
 
   const lines = text.split(NEWLINE).filter((line) => line.length > 0);
