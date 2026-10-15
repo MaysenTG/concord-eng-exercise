@@ -5,7 +5,7 @@ import {
   doneLabelFor,
 } from "../data/action-desk";
 
-const ADVANCE_MS = 900;
+const ADVANCE_MS = 1400;
 
 type ActionDeskProps = {
   plan: ActionPlan;
@@ -35,14 +35,34 @@ function toggleId(checked: ReadonlySet<string>, id: string): Set<string> {
   return next;
 }
 
+function destinationLabel(plan: ActionPlan): string {
+  if (plan.destination === "government") {
+    return "Outbound · government";
+  }
+  if (plan.destination === "beneficiary") {
+    return "Outbound · employee";
+  }
+  return "Outbound · client";
+}
+
 /**
  * Interactive work surface for the advisor's next move.
- * Visual-only: ticking items and pressing the CTA do not change the export.
+ * CTAs look like real outbound sends; this exercise does not call an API.
  * Remount with a React `key` (usually the employee id) to reset per case.
  */
 export function ActionDesk({ plan, nextCaseId, onComplete }: ActionDeskProps) {
   const [checked, setChecked] = useState(() => new Set<string>());
-  const [phase, setPhase] = useState<"ready" | "done">("ready");
+  const [phase, setPhase] = useState<"ready" | "sending" | "done">("ready");
+
+  useEffect(() => {
+    if (phase !== "sending") {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setPhase("done");
+    }, 700);
+    return () => window.clearTimeout(timer);
+  }, [phase]);
 
   useEffect(() => {
     if (phase !== "done") {
@@ -56,6 +76,7 @@ export function ActionDesk({ plan, nextCaseId, onComplete }: ActionDeskProps) {
 
   const ready = allRequiredChecked(plan.checklist, checked);
   const urgent = plan.urgent && phase === "ready";
+  const busy = phase !== "ready";
 
   if (phase === "done") {
     return (
@@ -64,7 +85,22 @@ export function ActionDesk({ plan, nextCaseId, onComplete }: ActionDeskProps) {
         className="action-desk action-desk-done"
         role="status"
       >
+        <p className="action-desk-eyebrow">Not sent — demo</p>
         <h2>{doneLabelFor(plan, Boolean(nextCaseId))}</h2>
+      </section>
+    );
+  }
+
+  if (phase === "sending") {
+    return (
+      <section
+        aria-live="polite"
+        className="action-desk action-desk-sending"
+        role="status"
+      >
+        <p className="action-desk-eyebrow">{destinationLabel(plan)}</p>
+        <h2>Preparing submission…</h2>
+        <p className="action-desk-detail">{plan.demoNote}</p>
       </section>
     );
   }
@@ -75,7 +111,9 @@ export function ActionDesk({ plan, nextCaseId, onComplete }: ActionDeskProps) {
       className={urgent ? "action-desk action-desk-urgent" : "action-desk"}
     >
       <div className="action-desk-main">
-        <p className="action-desk-eyebrow">Do this now</p>
+        <p className="action-desk-eyebrow">
+          Do this now · {destinationLabel(plan)}
+        </p>
         <h2 id="action-desk-title">{plan.title}</h2>
         {plan.detail ? (
           <p className="action-desk-detail">{plan.detail}</p>
@@ -90,6 +128,7 @@ export function ActionDesk({ plan, nextCaseId, onComplete }: ActionDeskProps) {
                   <label className="action-desk-check" htmlFor={inputId}>
                     <input
                       checked={checked.has(item.id)}
+                      disabled={busy}
                       id={inputId}
                       // Same pattern as the queue filters — biome flags inline handlers project-wide.
                       onChange={(event: ChangeEvent<HTMLInputElement>) => {
@@ -123,21 +162,15 @@ export function ActionDesk({ plan, nextCaseId, onComplete }: ActionDeskProps) {
       <div className="action-desk-aside">
         <button
           className="action-desk-cta"
-          disabled={!ready}
-          onClick={() => setPhase("done")}
+          disabled={!ready || busy}
+          onClick={() => setPhase("sending")}
           type="button"
         >
           {plan.cta}
         </button>
-        {ready ? (
-          <p className="action-desk-hint">
-            {nextCaseId
-              ? "Then we open the next case in your list"
-              : "Then we return you to the list"}
-          </p>
-        ) : (
-          <p className="action-desk-hint">Tick the required items first</p>
-        )}
+        <p className="action-desk-hint">
+          {ready ? plan.demoNote : "Tick the required items first"}
+        </p>
       </div>
     </section>
   );

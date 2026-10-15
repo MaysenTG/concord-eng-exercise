@@ -455,17 +455,36 @@ th {
   border-color: #e0c36a;
 }
 
-.action-desk-done {
+.action-desk-done,
+.action-desk-sending {
   display: block;
-  background: #e8f5e9;
-  border-color: #2e7d32;
+}
+
+.action-desk-sending {
+  background: #e8f1fb;
+  border-color: #1565c0;
+}
+
+.action-desk-sending h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.action-desk-done {
+  background: #eef2f5;
+  border-color: #90a4ae;
 }
 
 .action-desk-done h2 {
   margin: 0;
   font-size: 16px;
   font-weight: 650;
-  color: #1b5e20;
+  color: #334;
+}
+
+.action-desk-done .action-desk-eyebrow {
+  color: #667;
 }
 
 .action-desk-eyebrow {

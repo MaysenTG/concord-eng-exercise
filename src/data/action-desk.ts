@@ -12,6 +12,9 @@ import { passportBeforeVisa, type ReplyClock, replyClock } from "./signals";
  *
  * Add a new kind: extend `ActionKind`, write a builder, call it from `buildActionPlan`.
  * The UI only renders an `ActionPlan`; it does not branch on case status.
+ *
+ * CTAs are framed as outbound sends (government, beneficiary, client). In this
+ * exercise they do not call an API — see `demoNote` / `doneLabel`.
  */
 
 export type ActionKind =
@@ -20,6 +23,9 @@ export type ActionKind =
   | "requestProfile"
   | "followUpDenial"
   | "confirmWithdrawn";
+
+/** Who the primary button would reach in a real product. */
+export type ActionDestination = "government" | "beneficiary" | "client";
 
 export type ChecklistItem = {
   id: string;
@@ -34,16 +40,35 @@ export type ActionPlan = {
   kind: ActionKind;
   title: string;
   detail?: string;
+  /** Outbound-sounding button label, e.g. "Submit reply to the government". */
   cta: string;
+  destination: ActionDestination;
   urgent: boolean;
   checklist: ChecklistItem[];
+  /** Short line under the CTA while armed — demo does not send. */
+  demoNote: string;
   /** Shown after the CTA is pressed, before we open the next case. */
   doneLabel: string;
 };
 
-const COPY = {
-  doneNext: "Done — opening the next case…",
-  doneQueue: "Done — back to your list…",
+const DEMO = {
+  government:
+    "Demo only — this would submit to the government. Nothing is sent here.",
+  beneficiary:
+    "Demo only — this would email the employee. Nothing is sent here.",
+  client: "Demo only — this would notify the client. Nothing is sent here.",
+  doneGovNext:
+    "Would have submitted to the government — nothing sent. Opening next case…",
+  doneGovQueue:
+    "Would have submitted to the government — nothing sent. Back to your list…",
+  doneBeneficiaryNext:
+    "Would have sent the request — nothing sent. Opening next case…",
+  doneBeneficiaryQueue:
+    "Would have sent the request — nothing sent. Back to your list…",
+  doneClientNext:
+    "Would have notified the client — nothing sent. Opening next case…",
+  doneClientQueue:
+    "Would have notified the client — nothing sent. Back to your list…",
 } as const;
 
 function profilePercent(row: EmployeeRow): number | null {
@@ -71,9 +96,11 @@ function submitEvidence(row: EmployeeRow, reply: ReplyClock): ActionPlan {
       },
       { id: "letter", label: "Cover response drafted" },
     ],
-    cta: "Mark reply submitted",
+    cta: "Submit reply to the government",
+    demoNote: DEMO.government,
+    destination: "government",
     detail,
-    doneLabel: COPY.doneNext,
+    doneLabel: DEMO.doneGovNext,
     kind: "submitEvidence",
     title: "Assemble & submit the reply",
     urgent: reply.overdue,
@@ -112,9 +139,12 @@ function filePetition(row: EmployeeRow): ActionPlan {
 
   return {
     checklist,
-    cta: "File petition",
-    detail: "Last look before submission. After this, the record is locked.",
-    doneLabel: COPY.doneNext,
+    cta: "Submit petition to the government",
+    demoNote: DEMO.government,
+    destination: "government",
+    detail:
+      "Last look before it leaves Concord. In production this would file with the government and lock the record.",
+    doneLabel: DEMO.doneGovNext,
     kind: "filePetition",
     title: "File the petition",
     urgent: false,
@@ -124,6 +154,7 @@ function filePetition(row: EmployeeRow): ActionPlan {
 function requestProfile(row: EmployeeRow): ActionPlan {
   const pct = profilePercent(row);
   const almostDone = pct !== null && pct >= PRIORITY.profile.quickWinAtPercent;
+  const name = row.full_name.trim() || "the employee";
 
   const checklist: ChecklistItem[] = [
     { id: "passport", label: "Passport scan" },
@@ -142,14 +173,16 @@ function requestProfile(row: EmployeeRow): ActionPlan {
 
   return {
     checklist,
-    cta: "Send request",
+    cta: `Send request to ${name}`,
+    demoNote: DEMO.beneficiary,
+    destination: "beneficiary",
     detail:
       pct === null
         ? "Profile still needs information before it can be filed."
         : almostDone
           ? `Almost finished — ${pct}% filled in. A short chase should unblock filing.`
           : `${pct}% filled in. Send a clear ask for what is still missing.`,
-    doneLabel: COPY.doneNext,
+    doneLabel: DEMO.doneBeneficiaryNext,
     kind: "requestProfile",
     title: "Request missing pieces",
     urgent: false,
@@ -167,9 +200,11 @@ function followUpDenial(): ActionPlan {
         required: false,
       },
     ],
-    cta: "Log follow-up",
+    cta: "Send follow-up to the client",
+    demoNote: DEMO.client,
+    destination: "client",
     detail: "Confirm the next step with the client — appeal, refile, or close.",
-    doneLabel: COPY.doneNext,
+    doneLabel: DEMO.doneClientNext,
     kind: "followUpDenial",
     title: "Follow up on the denial",
     urgent: false,
@@ -186,9 +221,11 @@ function confirmWithdrawn(): ActionPlan {
         required: false,
       },
     ],
-    cta: "Mark confirmed",
+    cta: "Send confirmation to the client",
+    demoNote: DEMO.client,
+    destination: "client",
     detail: "Make sure the withdrawal is closed out with the client.",
-    doneLabel: COPY.doneNext,
+    doneLabel: DEMO.doneClientNext,
     kind: "confirmWithdrawn",
     title: "Confirm nothing else is owed",
     urgent: false,
@@ -233,5 +270,14 @@ export function buildActionPlan(
 }
 
 export function doneLabelFor(plan: ActionPlan, hasNext: boolean): string {
-  return hasNext ? plan.doneLabel : COPY.doneQueue;
+  if (hasNext) {
+    return plan.doneLabel;
+  }
+  if (plan.destination === "government") {
+    return DEMO.doneGovQueue;
+  }
+  if (plan.destination === "beneficiary") {
+    return DEMO.doneBeneficiaryQueue;
+  }
+  return DEMO.doneClientQueue;
 }
