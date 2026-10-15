@@ -31,6 +31,9 @@ jobs:
       - name: Install
         run: bun install --frozen-lockfile
 
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
       - name: Build
         env:
           BASE_PATH: /${{ github.event.repository.name }}/
@@ -52,6 +55,28 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # actions/deploy-pages requires Source = "GitHub Actions" (build_type: workflow).
+      # If the site was first enabled as "Deploy from a branch", flip it here.
+      - name: Ensure Pages uses GitHub Actions
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            try {
+              await github.request("PUT /repos/{owner}/{repo}/pages", {
+                owner,
+                repo,
+                build_type: "workflow",
+              });
+              core.info("Pages build_type set to workflow");
+            } catch (error) {
+              core.warning(
+                `Could not set Pages build_type to workflow (${error.status || "?"} ${error.message}). ` +
+                  "If deploy fails with 404, set Source to GitHub Actions at " +
+                  `https://github.com/${owner}/${repo}/settings/pages`,
+              );
+            }
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
