@@ -5,6 +5,7 @@ import {
   useEffect,
   useMemo,
 } from "react";
+import { CaseNavProvider } from "../case-nav";
 import {
   CASE_STATUS,
   COPY,
@@ -41,34 +42,34 @@ export type QueueFilters = {
 
 const OVERVIEW_CARDS: { key: OverviewKey; label: string; hint: string }[] = [
   {
+    hint: "Anything that is not already approved",
     key: OVERVIEW.NEEDING_WORK,
     label: "Needs your attention",
-    hint: "Anything that is not already approved",
   },
   {
+    hint: "The government asked for something else",
     key: OVERVIEW.RFE,
     label: "More evidence requested",
-    hint: "The government asked for something else",
   },
   {
+    hint: "Submitted, in review, or waiting on evidence",
     key: OVERVIEW.IN_FLIGHT,
     label: "With the government",
-    hint: "Submitted, in review, or waiting on evidence",
   },
   {
+    hint: "Profile is finished and the case is not filed yet",
     key: OVERVIEW.READY_TO_FILE,
     label: "Ready to submit",
-    hint: "Profile is finished and the case is not filed yet",
   },
   {
+    hint: "Still missing information before it can be filed",
     key: OVERVIEW.INCOMPLETE_PROFILES,
     label: "Profile not finished",
-    hint: "Still missing information before it can be filed",
   },
   {
+    hint: "Dates or details that don't line up",
     key: OVERVIEW.WARNINGS,
     label: "Records to double-check",
-    hint: "Dates or details that don't line up",
   },
 ];
 
@@ -182,10 +183,10 @@ function neighbors(ranked: RankedCase[], selectedId?: string) {
     return null;
   }
   return {
-    place: index + 1,
-    total: ranked.length,
-    previousId: ranked[index - 1]?.row.employee_id,
     nextId: ranked[index + 1]?.row.employee_id,
+    place: index + 1,
+    previousId: ranked[index - 1]?.row.employee_id,
+    total: ranked.length,
   };
 }
 
@@ -227,8 +228,8 @@ function filtersAreNarrowed(
 function clearedFilters(sessionAdvisor: string): QueueFilters {
   return {
     advisor: sessionAdvisor || FILTER.ALL,
-    company: FILTER.ALL,
     caseStatus: FILTER.ALL,
+    company: FILTER.ALL,
     overview: null,
   };
 }
@@ -365,7 +366,14 @@ function CasePane({
           </button>
         </div>
       </div>
-      {detail}
+      <CaseNavProvider
+        value={{
+          nextCaseId: place?.nextId,
+          previousCaseId: place?.previousId,
+        }}
+      >
+        {detail}
+      </CaseNavProvider>
     </div>
   );
 }
@@ -450,10 +458,10 @@ export function QueuePage({
         .map((row) => {
           const priority = priorityScore(row);
           return {
-            row,
             reasons: priority.reasons,
-            warnings: validateEmployee(row, rows),
+            row,
             score: priority.score,
+            warnings: validateEmployee(row, rows),
           };
         })
         .sort(comparePriority),
@@ -465,7 +473,7 @@ export function QueuePage({
   const narrowed = filtersAreNarrowed(filters, sessionAdvisor);
 
   useEffect(() => {
-    if (!detail) {
+    if (!selectedId) {
       return;
     }
     const onKey = (event: KeyboardEvent) => {
@@ -482,7 +490,7 @@ export function QueuePage({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [detail]);
+  }, [selectedId]);
 
   useEffect(() => {
     if (!selectedId || ranked.length === 0) {
