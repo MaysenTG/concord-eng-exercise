@@ -562,6 +562,31 @@ th {
   margin-top: 16px;
 }
 
+/* Dropzone and submit stay on one row, including after a file is attached. */
+.action-desk:has(.action-desk-upload) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.action-desk-upload-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 220px);
+  column-gap: 28px;
+  row-gap: 12px;
+  align-items: center;
+}
+
+.action-desk-upload-notes {
+  align-items: start;
+  margin-top: 8px;
+}
+
+.action-desk-upload-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
 .action-desk-upload-label {
   margin: 0 0 8px;
   font-size: 14px;
@@ -569,10 +594,12 @@ th {
 }
 
 .action-desk-dropzone {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
+  min-width: 0;
   min-height: 96px;
   padding: 16px;
   font: inherit;
@@ -663,6 +690,15 @@ th {
   cursor: default;
 }
 
+.action-desk-upload-notes .action-desk-upload-hint,
+.action-desk-upload-notes .action-desk-upload-clear {
+  margin-top: 0;
+}
+
+.action-desk-upload-notes .action-desk-upload-clear {
+  align-self: flex-start;
+}
+
 .action-desk-aside {
   display: flex;
   flex-direction: column;
@@ -711,6 +747,10 @@ th {
 
 @media (max-width: 639px) {
   .action-desk {
+    grid-template-columns: 1fr;
+  }
+
+  .action-desk-upload-row {
     grid-template-columns: 1fr;
   }
 

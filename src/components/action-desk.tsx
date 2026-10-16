@@ -80,6 +80,11 @@ export function ActionDesk({ plan, nextCaseId, onComplete }: ActionDeskProps) {
   const ready = uploadReady && allRequiredChecked(plan.checklist, checked);
   const urgent = plan.urgent && phase === "ready";
   const busy = phase !== "ready";
+  const statusHint = ready
+    ? plan.demoNote
+    : plan.upload && !attached
+      ? "Attach the evidence packet first"
+      : "Tick the required items first";
 
   if (phase === "done") {
     return (
@@ -128,9 +133,11 @@ export function ActionDesk({ plan, nextCaseId, onComplete }: ActionDeskProps) {
             {/*
               Real file selection is blocked on purpose. Clicking the dropzone
               only attaches a placeholder packet so the resubmit flow is usable.
+              The dropzone and submit button share a row so attaching a file
+              does not push the button out of line with the box.
             */}
-            {attached ? (
-              <>
+            <div className="action-desk-upload-row">
+              {attached ? (
                 <div className="action-desk-dropzone action-desk-dropzone-disabled">
                   <span className="action-desk-dropzone-file">
                     {plan.upload.demoFileName}
@@ -139,31 +146,46 @@ export function ActionDesk({ plan, nextCaseId, onComplete }: ActionDeskProps) {
                     </span>
                   </span>
                 </div>
+              ) : (
                 <button
-                  className="action-desk-upload-clear"
+                  className="action-desk-dropzone"
                   disabled={busy}
-                  onClick={() => setAttached(false)}
+                  onClick={() => setAttached(true)}
                   type="button"
                 >
-                  Remove attachment
+                  <span className="action-desk-dropzone-prompt">
+                    Attach evidence packet
+                    <span className="action-desk-dropzone-badge">
+                      Demo only — choose to attach a placeholder PDF
+                    </span>
+                  </span>
                 </button>
-              </>
-            ) : (
+              )}
               <button
-                className="action-desk-dropzone"
-                disabled={busy}
-                onClick={() => setAttached(true)}
+                className="action-desk-cta"
+                disabled={!ready || busy}
+                onClick={() => setPhase("sending")}
                 type="button"
               >
-                <span className="action-desk-dropzone-prompt">
-                  Attach evidence packet
-                  <span className="action-desk-dropzone-badge">
-                    Demo only — choose to attach a placeholder PDF
-                  </span>
-                </span>
+                {plan.cta}
               </button>
-            )}
-            <p className="action-desk-upload-hint">{plan.upload.hint}</p>
+            </div>
+            <div className="action-desk-upload-row action-desk-upload-notes">
+              <div className="action-desk-upload-meta">
+                {attached ? (
+                  <button
+                    className="action-desk-upload-clear"
+                    disabled={busy}
+                    onClick={() => setAttached(false)}
+                    type="button"
+                  >
+                    Remove attachment
+                  </button>
+                ) : null}
+                <p className="action-desk-upload-hint">{plan.upload.hint}</p>
+              </div>
+              <p className="action-desk-hint">{statusHint}</p>
+            </div>
           </div>
         ) : null}
 
@@ -207,23 +229,19 @@ export function ActionDesk({ plan, nextCaseId, onComplete }: ActionDeskProps) {
         ) : null}
       </div>
 
-      <div className="action-desk-aside">
-        <button
-          className="action-desk-cta"
-          disabled={!ready || busy}
-          onClick={() => setPhase("sending")}
-          type="button"
-        >
-          {plan.cta}
-        </button>
-        <p className="action-desk-hint">
-          {ready
-            ? plan.demoNote
-            : plan.upload && !attached
-              ? "Attach the evidence packet first"
-              : "Tick the required items first"}
-        </p>
-      </div>
+      {plan.upload ? null : (
+        <div className="action-desk-aside">
+          <button
+            className="action-desk-cta"
+            disabled={!ready || busy}
+            onClick={() => setPhase("sending")}
+            type="button"
+          >
+            {plan.cta}
+          </button>
+          <p className="action-desk-hint">{statusHint}</p>
+        </div>
+      )}
     </section>
   );
 }
