@@ -1,5 +1,54 @@
 # Concord Engineering Exercise — Visa Tracking
 
+## What changed (candidate work)
+
+This fork turns the rough scaffold into an **advisor-facing case queue**: prioritise
+what needs attention, open a case, and take the next action.
+
+### Product / UX
+
+- **Ranked queue** — cases ordered by urgency (RFEs first, then ready-to-file /
+  in-flight work; approved visas deprioritised).
+- **List + detail layout** — decluttered index on the left; case view on the right
+  with key facts up front.
+- **Overview chips + filters** — quick cuts like “Needs your attention”, “More
+  evidence requested”, “Records to double-check”, plus advisor / company / status
+  dropdowns.
+- **Alerts** — overdue reply signals, “Check” badges for messy records, and
+  on-case callouts (e.g. denied-but-still-has-an-approval-date).
+- **Action desk (“Do this now”)** — interactive checklist + outbound-style CTA per
+  case state (RFE reply, file petition, request profile, denial follow-up,
+  withdrawal confirm). Demo only — nothing is sent.
+
+### Data / engineering
+
+- CSV tidy-up (date formats, status spelling, inferred blanks where noted in
+  `notes.md`).
+- Priority scoring, validation warnings, and reply-window helpers under `src/data/`.
+- Client-side routing for `/cases/:id`, GitHub Pages deploy with SPA fallback.
+
+### Screenshots
+
+<p>
+  <img alt="Queue with overview chips and filters" src="docs/screenshots/01-queue-filters.png" width="100%" />
+</p>
+
+*Queue — overview chips (“Needs your attention”) and advisor / company / status filters.*
+
+<p>
+  <img alt="RFE case with Do this now action desk" src="docs/screenshots/02-action-desk-rfe.png" width="100%" />
+</p>
+
+*Case detail — overdue RFE with the action desk checklist and submit CTA.*
+
+<p>
+  <img alt="Records to double-check filter with data quality alert" src="docs/screenshots/03-alerts-and-warnings.png" width="100%" />
+</p>
+
+*“Records to double-check” filter — denial follow-up action banner plus a data-quality alert.*
+
+---
+
 ## Scenario
 
 Concord helps organisations manage visas and global mobility. Several parties rely
@@ -104,12 +153,17 @@ should go:
 
 ```
 src/
-  main.tsx               # entry point
-  app.tsx                # the scaffold page (table + status badge + one Card)
-  components/card.tsx    # design-system sample component
-  data/load-employees.ts # reads the CSV into rows (every column, raw)
+  main.tsx                 # entry point
+  app.tsx                  # loads CSV, session advisor, wires queue/case
+  router.tsx               # client routes (`/` and `/cases/:id`)
+  pages/queue-page.tsx     # ranked list, overview chips, filters
+  pages/case-page.tsx      # case detail + warnings
+  components/action-desk.tsx
+  components/card.tsx      # design-system sample component
+  data/                    # priority, signals, validation, action plans, CSV load
 public/
-  concord_employees.csv  # the export the dashboard renders
+  concord_employees.csv    # the export the dashboard renders
+docs/screenshots/          # UI screenshots referenced above
 ```
 
 Everything else (`index.html`, `vite.config.ts`, `tsconfig.json`, `biome.jsonc`,
