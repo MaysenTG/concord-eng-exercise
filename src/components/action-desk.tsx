@@ -52,6 +52,8 @@ function destinationLabel(plan: ActionPlan): string {
  */
 export function ActionDesk({ plan, nextCaseId, onComplete }: ActionDeskProps) {
   const [checked, setChecked] = useState(() => new Set<string>());
+  /** Fake attachment for upload workflows — never backed by a real File. */
+  const [demoAttached, setDemoAttached] = useState(false);
   const [phase, setPhase] = useState<"ready" | "sending" | "done">("ready");
 
   useEffect(() => {
@@ -74,7 +76,9 @@ export function ActionDesk({ plan, nextCaseId, onComplete }: ActionDeskProps) {
     return () => window.clearTimeout(timer);
   }, [nextCaseId, onComplete, phase]);
 
-  const ready = allRequiredChecked(plan.checklist, checked);
+  const checklistReady = allRequiredChecked(plan.checklist, checked);
+  const uploadReady = !plan.upload || demoAttached;
+  const ready = checklistReady && uploadReady;
   const urgent = plan.urgent && phase === "ready";
   const busy = phase !== "ready";
 
@@ -117,6 +121,59 @@ export function ActionDesk({ plan, nextCaseId, onComplete }: ActionDeskProps) {
         <h2 id="action-desk-title">{plan.title}</h2>
         {plan.detail ? (
           <p className="action-desk-detail">{plan.detail}</p>
+        ) : null}
+
+        {plan.upload ? (
+          <div className="action-desk-upload">
+            <p className="action-desk-upload-label">{plan.upload.label}</p>
+            {/*
+              Disabled file input on purpose: this exercise must not accept
+              real uploads. The demo button below only sets a placeholder name.
+            */}
+            <label className="action-desk-dropzone action-desk-dropzone-disabled">
+              <input
+                accept=".pdf,.zip,.png,.jpg,.jpeg"
+                disabled
+                tabIndex={-1}
+                type="file"
+              />
+              {demoAttached ? (
+                <span className="action-desk-dropzone-file">
+                  {plan.upload.demoFileName}
+                  <span className="action-desk-dropzone-badge">
+                    Demo placeholder — not uploaded
+                  </span>
+                </span>
+              ) : (
+                <span className="action-desk-dropzone-prompt">
+                  Drop evidence here, or browse
+                  <span className="action-desk-dropzone-badge">
+                    Upload disabled in this demo
+                  </span>
+                </span>
+              )}
+            </label>
+            <p className="action-desk-upload-hint">{plan.upload.hint}</p>
+            {demoAttached ? (
+              <button
+                className="action-desk-upload-clear"
+                disabled={busy}
+                onClick={() => setDemoAttached(false)}
+                type="button"
+              >
+                Remove placeholder
+              </button>
+            ) : (
+              <button
+                className="action-desk-upload-demo"
+                disabled={busy}
+                onClick={() => setDemoAttached(true)}
+                type="button"
+              >
+                Use placeholder evidence (demo)
+              </button>
+            )}
+          </div>
         ) : null}
 
         {plan.checklist.length > 0 ? (
@@ -169,7 +226,11 @@ export function ActionDesk({ plan, nextCaseId, onComplete }: ActionDeskProps) {
           {plan.cta}
         </button>
         <p className="action-desk-hint">
-          {ready ? plan.demoNote : "Tick the required items first"}
+          {ready
+            ? plan.demoNote
+            : plan.upload
+              ? "Attach evidence before resubmitting"
+              : "Tick the required items first"}
         </p>
       </div>
     </section>
