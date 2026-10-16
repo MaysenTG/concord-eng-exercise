@@ -36,6 +36,19 @@ export type ChecklistItem = {
   required?: boolean;
 };
 
+/**
+ * Dummy file upload shown on evidence workflows.
+ * The UI never accepts a real file — see ActionDesk.
+ */
+export type ActionUpload = {
+  /** Primary label on the dropzone. */
+  label: string;
+  /** Explains what would be uploaded in a real product. */
+  hint: string;
+  /** Shown as the fake selected filename after the demo attach step. */
+  demoFileName: string;
+};
+
 export type ActionPlan = {
   kind: ActionKind;
   title: string;
@@ -45,6 +58,8 @@ export type ActionPlan = {
   destination: ActionDestination;
   urgent: boolean;
   checklist: ChecklistItem[];
+  /** When set, the desk shows a file-upload step instead of (or before) a checklist. */
+  upload?: ActionUpload;
   /** Short line under the CTA while armed — demo does not send. */
   demoNote: string;
   /** Shown after the CTA is pressed, before we open the next case. */
@@ -77,32 +92,29 @@ function profilePercent(row: EmployeeRow): number | null {
 }
 
 function submitEvidence(row: EmployeeRow, reply: ReplyClock): ActionPlan {
-  const detail = reply.due ? `${reply.label}. Due ${reply.due}.` : reply.detail;
+  const dueLine = reply.due
+    ? `${reply.label}. Due ${reply.due}.`
+    : reply.detail;
+  const o1aHint =
+    row.visa_type === VISA_TYPE.O1A
+      ? " O-1A replies usually include expert letters and achievement proof."
+      : "";
 
   return {
-    checklist: [
-      {
-        detail: "Confirm what the government asked for",
-        id: "notice",
-        label: "RFE notice reviewed",
-      },
-      {
-        detail:
-          row.visa_type === VISA_TYPE.O1A
-            ? "O-1A — expect expert letters and achievement proof"
-            : undefined,
-        id: "evidence",
-        label: "Supporting evidence gathered",
-      },
-      { id: "letter", label: "Cover response drafted" },
-    ],
-    cta: "Submit reply to the government",
-    demoNote: DEMO.government,
+    checklist: [],
+    cta: "Resubmit case to the government",
+    demoNote:
+      "Demo only — evidence upload is disabled here, and nothing is submitted.",
     destination: "government",
-    detail,
+    detail: `${dueLine} Upload the supporting evidence, then resubmit the case.${o1aHint}`,
     doneLabel: DEMO.doneGovNext,
     kind: "submitEvidence",
-    title: "Assemble & submit the reply",
+    title: "Upload evidence & resubmit",
+    upload: {
+      demoFileName: "rfe-evidence-pack.pdf",
+      hint: "Demo evidence is pre-attached. In a real product you'd choose the RFE response packet here — this exercise cannot accept files.",
+      label: "Evidence for the RFE reply",
+    },
     urgent: reply.overdue,
   };
 }

@@ -483,10 +483,6 @@ th {
   color: #334;
 }
 
-.action-desk-done .action-desk-eyebrow {
-  color: #667;
-}
-
 .action-desk-eyebrow {
   margin: 0 0 4px;
   font-size: 11px;
@@ -494,6 +490,10 @@ th {
   color: #5c6b7a;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+
+.action-desk-done .action-desk-eyebrow {
+  color: #667;
 }
 
 .action-desk-urgent .action-desk-eyebrow {
@@ -556,6 +556,99 @@ th {
   margin-top: 2px;
   font-size: 11px;
   color: #889;
+}
+
+.action-desk-upload {
+  margin-top: 16px;
+}
+
+.action-desk-upload-label {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 550;
+}
+
+.action-desk-dropzone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 96px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  background: #fff;
+  border: 1.5px dashed #90a4ae;
+  border-radius: 8px;
+}
+
+.action-desk-dropzone-disabled {
+  cursor: not-allowed;
+  background: #f5f7f9;
+  border-color: #b0bec5;
+}
+
+.action-desk-dropzone input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  white-space: nowrap;
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+}
+
+.action-desk-dropzone-prompt,
+.action-desk-dropzone-file {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 550;
+  color: #455a64;
+}
+
+.action-desk-dropzone-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8a4b08;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.action-desk-upload-hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #667;
+}
+
+.action-desk-upload-demo,
+.action-desk-upload-clear {
+  padding: 0;
+  margin-top: 10px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1565c0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.action-desk-urgent .action-desk-upload-demo,
+.action-desk-urgent .action-desk-upload-clear {
+  color: #8a4b08;
+}
+
+.action-desk-upload-demo:disabled,
+.action-desk-upload-clear:disabled {
+  color: #90a4ae;
+  cursor: default;
 }
 
 .action-desk-aside {

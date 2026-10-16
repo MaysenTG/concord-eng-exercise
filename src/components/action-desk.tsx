@@ -74,6 +74,7 @@ export function ActionDesk({ plan, nextCaseId, onComplete }: ActionDeskProps) {
     return () => window.clearTimeout(timer);
   }, [nextCaseId, onComplete, phase]);
 
+  // Upload workflows always carry demo evidence — no real File is involved.
   const ready = allRequiredChecked(plan.checklist, checked);
   const urgent = plan.urgent && phase === "ready";
   const busy = phase !== "ready";
@@ -117,6 +118,31 @@ export function ActionDesk({ plan, nextCaseId, onComplete }: ActionDeskProps) {
         <h2 id="action-desk-title">{plan.title}</h2>
         {plan.detail ? (
           <p className="action-desk-detail">{plan.detail}</p>
+        ) : null}
+
+        {plan.upload ? (
+          <div className="action-desk-upload">
+            <p className="action-desk-upload-label">{plan.upload.label}</p>
+            {/*
+              Disabled file input on purpose: this exercise must not accept
+              real uploads. Demo evidence is always pre-attached below.
+            */}
+            <label className="action-desk-dropzone action-desk-dropzone-disabled">
+              <input
+                accept=".pdf,.zip,.png,.jpg,.jpeg"
+                disabled
+                tabIndex={-1}
+                type="file"
+              />
+              <span className="action-desk-dropzone-file">
+                {plan.upload.demoFileName}
+                <span className="action-desk-dropzone-badge">
+                  Demo evidence — not uploaded
+                </span>
+              </span>
+            </label>
+            <p className="action-desk-upload-hint">{plan.upload.hint}</p>
+          </div>
         ) : null}
 
         {plan.checklist.length > 0 ? (
