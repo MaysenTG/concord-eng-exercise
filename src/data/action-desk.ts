@@ -112,7 +112,7 @@ function submitEvidence(row: EmployeeRow, reply: ReplyClock): ActionPlan {
     title: "Upload evidence & resubmit",
     upload: {
       demoFileName: "rfe-evidence-pack.pdf",
-      hint: "In a real product you'd attach the RFE response packet here. This demo cannot accept files.",
+      hint: "Demo evidence is pre-attached. In a real product you'd choose the RFE response packet here — this exercise cannot accept files.",
       label: "Evidence for the RFE reply",
     },
     urgent: reply.overdue,
