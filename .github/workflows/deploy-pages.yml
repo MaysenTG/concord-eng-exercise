@@ -1,22 +1,25 @@
-# Build the Vite app and publish it to the gh-pages branch on every push to main.
-# Repo Pages settings must use Source: Deploy from a branch → gh-pages / (root).
+# Build the Vite app and publish to GitHub Pages via the official Actions deploy flow.
+# Repo Settings → Pages → Build and deployment → Source: GitHub Actions
+# (If Source is still "Deploy from branch → main", Pages will serve raw index.html
+# and the browser will request https://<user>.github.io/src/main.tsx — wrong MIME type.)
 name: Deploy to GitHub Pages
 
 on:
   push:
     branches: [main]
-  # Manual re-publish from Actions → Deploy to GitHub Pages → Run workflow
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -39,8 +42,18 @@ jobs:
       - name: Add 404.html for client routes
         run: cp dist/index.html dist/404.html
 
-      - name: Publish to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
