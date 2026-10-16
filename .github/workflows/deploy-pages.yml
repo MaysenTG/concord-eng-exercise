@@ -1,7 +1,11 @@
-# Build the Vite app and publish to GitHub Pages via the official Actions deploy flow.
-# Repo Settings → Pages → Build and deployment → Source: GitHub Actions
-# (If Source is still "Deploy from branch → main", Pages will serve raw index.html
-# and the browser will request https://<user>.github.io/src/main.tsx — wrong MIME type.)
+# Build the Vite app and publish to GitHub Pages.
+#
+# Recommended repo setting (Settings → Pages → Build and deployment):
+#   Source: Deploy from a branch → gh-pages / (root)
+#
+# Also publishes via GitHub Actions if you switch Source to "GitHub Actions".
+# Do NOT use branch "main" / (root) — that serves dev index.html and breaks with
+#   https://<user>.github.io/src/main.tsx (HTML MIME type error).
 name: Deploy to GitHub Pages
 
 on:
@@ -10,7 +14,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -41,6 +45,15 @@ jobs:
       # SPA fallback: deep links like /cases/EMP-1003 reload on Pages.
       - name: Add 404.html for client routes
         run: cp dist/index.html dist/404.html
+
+      - name: Publish to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
