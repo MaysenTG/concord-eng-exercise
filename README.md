@@ -17,8 +17,8 @@ what needs attention, open a case, and take the next action.
 - **Alerts** — overdue reply signals, “Check” badges for messy records, and
   on-case callouts (e.g. denied-but-still-has-an-approval-date).
 - **Action desk (“Do this now”)** — interactive checklist + outbound-style CTA per
-  case state (RFE reply, file petition, request profile, denial follow-up,
-  withdrawal confirm). Demo only — nothing is sent.
+  case state (RFE reply with demo evidence upload, file petition, request
+  profile, denial follow-up, withdrawal confirm). Demo only — nothing is sent.
 
 ### Data / engineering
 
@@ -39,7 +39,7 @@ what needs attention, open a case, and take the next action.
   <img alt="RFE case with Do this now action desk" src="docs/screenshots/02-action-desk-rfe.png" width="100%" />
 </p>
 
-*Case detail — overdue RFE with the action desk checklist and submit CTA.*
+*Case detail — overdue RFE with the evidence upload dropzone and resubmit CTA.*
 
 <p>
   <img alt="Records to double-check filter with data quality alert" src="docs/screenshots/03-alerts-and-warnings.png" width="100%" />

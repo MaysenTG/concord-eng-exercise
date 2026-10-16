@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useRef } from "react";
+import type { ReactNode } from "react";
 import { useCaseNav } from "../case-nav";
 import { ActionDesk } from "../components/action-desk";
 import { buildActionPlan } from "../data/action-desk";
@@ -208,14 +208,6 @@ function finishAction(nextCaseId?: string) {
 export function CasePage({ employeeId, rows, loadState }: CasePageProps) {
   const { nextCaseId } = useCaseNav();
   const row = rows.find((candidate) => candidate.employee_id === employeeId);
-  const headingRef = useRef<HTMLHeadingElement>(null);
-
-  useEffect(() => {
-    if (loadState === "loading" || !employeeId) {
-      return;
-    }
-    headingRef.current?.focus();
-  }, [employeeId, loadState]);
 
   if (!row) {
     if (loadState === "loading") {
@@ -227,7 +219,7 @@ export function CasePage({ employeeId, rows, loadState }: CasePageProps) {
     }
     return (
       <div className="case-panel">
-        <h1 ref={headingRef} tabIndex={-1}>
+        <h1>
           {loadState === "error" ? COPY.LOAD_FAILED : COPY.CASE_NOT_FOUND}
         </h1>
         {loadState === "ready" ? (
@@ -248,9 +240,7 @@ export function CasePage({ employeeId, rows, loadState }: CasePageProps) {
   return (
     <div className="case-panel">
       <header className="case-heading">
-        <h1 ref={headingRef} tabIndex={-1}>
-          {row.full_name}
-        </h1>
+        <h1>{row.full_name}</h1>
         <p>{[row.job_title, row.company].filter(Boolean).join(" · ")}</p>
         <dl className="key-facts">
           {keyFacts(row, reply).map((fact) => (

@@ -104,15 +104,15 @@ function submitEvidence(row: EmployeeRow, reply: ReplyClock): ActionPlan {
     checklist: [],
     cta: "Resubmit case to the government",
     demoNote:
-      "Demo only — evidence upload is disabled here, and nothing is submitted.",
+      "Demo only — nothing is uploaded or submitted to the government.",
     destination: "government",
-    detail: `${dueLine} Upload the supporting evidence, then resubmit the case.${o1aHint}`,
+    detail: `${dueLine} Attach the supporting evidence below, then resubmit the case.${o1aHint}`,
     doneLabel: DEMO.doneGovNext,
     kind: "submitEvidence",
     title: "Upload evidence & resubmit",
     upload: {
       demoFileName: "rfe-evidence-pack.pdf",
-      hint: "Demo evidence is pre-attached. In a real product you'd choose the RFE response packet here — this exercise cannot accept files.",
+      hint: "In a real product you'd choose the RFE response packet here. This exercise only attaches a placeholder — no files leave your machine.",
       label: "Evidence for the RFE reply",
     },
     urgent: reply.overdue,

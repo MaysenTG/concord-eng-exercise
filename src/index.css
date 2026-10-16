@@ -572,13 +572,25 @@ th {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
   min-height: 96px;
   padding: 16px;
+  font: inherit;
   text-align: center;
   cursor: pointer;
   background: #fff;
   border: 1.5px dashed #90a4ae;
   border-radius: 8px;
+}
+
+.action-desk-dropzone:hover:not(:disabled):not(.action-desk-dropzone-disabled) {
+  background: #f7fafc;
+  border-color: #607d8b;
+}
+
+.action-desk-dropzone:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .action-desk-dropzone-disabled {
